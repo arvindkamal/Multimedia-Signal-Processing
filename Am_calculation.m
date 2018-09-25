@@ -2,7 +2,7 @@ function [RealAm, totalerror, voiced_unvoiced] = Am_calculation(max_p0,Sw)
 
 w0 = 2*pi./max_p0;
 win = hamming(200); %w[n]
-winFFT = fft(win,1024);
+
 N =1024;
 columns = 267;
 
@@ -16,12 +16,15 @@ end
 
 for y= 1:columns
     for j = 1:max_p0(y)-1
+        for a = 1:200
+            win_shifted(a) = win(a) .* exp(1i*j*w0(y)*a);
+        end
+        winFFT=fft(win_shifted, 1024);
         for x = am(j,y):bm(j,y)
             
+            top(x,y) = Sw(x,y)  .* conj(winFFT(x));
             
-            top(1:bm(j,y)-am(j,y)+1,y) = Sw(x,y)  .* conj(winFFT(x,1));
-            
-            bottom(1:bm(j,y)-am(j,y)+1,y) = abs(winFFT(x,1)).^2; 
+            bottom(x,y) = abs(winFFT(x)).^2; 
         end
         
     Am_voiced(j,y) = sum(top(:,y))/sum(bottom(:,y));   
@@ -36,7 +39,7 @@ for i= 1:columns
     for j = 1:max_p0(i)-1    
         for x = am(j,i):bm(j,i)
         
-        error1 = abs(Sw(x,1) - (Am_voiced(j,i)).*(winFFT(x,1))).^2;
+        error1(x) = abs(Sw(x,i) - (Am_voiced(j,i)).*(winFFT(x))).^2;
         end
         
         error_voiced(j,i) = 1/(2*pi) *sum(error1);
@@ -54,11 +57,11 @@ for i= 1:columns
     for j = 1:max_p0(i)-1
         for x = am(j,i):bm(j,i)
         
-            top = Sw(x,i)  .* conj(winFFTunvoiced(x,1));
-            bottom = abs(winFFTunvoiced(x,1)).^2;   
+            top(x,i) = Sw(x,i)  .* conj(winFFTunvoiced(x));
+            bottom(x,i) = abs(winFFTunvoiced(x)).^2;   
         
         end
-        Am_unvoiced(j,i) = sum(top)./sum(bottom);
+        Am_unvoiced(j,i) = sum(top(:,i))./sum(bottom(:,i));
     end  
     
 end
@@ -71,18 +74,13 @@ for i= 1:columns
     for j = 1:max_p0(i)-1
         
         for x = am(j,i):bm(j,i)
-        error2 = abs(real(Sw(x,1)) - real(Am_unvoiced(j,i)).* real(winFFTunvoiced(x,1)).^2);
-        
+            error2(x) = abs((Sw(x,i)) - (Am_unvoiced(j,i)).* (winFFTunvoiced(x)).^2);
         end
         
         error_unvoiced(j,i) = 1/(2*pi) *sum(error2);
     end
     
 end
-
-
-
-
 
 
 
