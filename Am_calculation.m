@@ -12,23 +12,23 @@ for i= 1:columns
 end
 
 
+winFFTshift = myfft(win,1024);
 
-
-for y= 1:columns
-    for j = 1:max_p0(y)-1
-        for a = 1:200
-            win_shifted(a) = win(a) .* exp(1i*j*w0(y)*a);
-        end
-        winFFT=fft(win_shifted, 1024);
-        for x = am(j,y):bm(j,y)
+for i = 1:columns 
+    for j = 1:max_p0(i)-1
+        for x= am(j,i):bm(j,i)
             
-            top(x,y) = Sw(x,y)  .* conj(winFFT(x));
-            
-            bottom(x,y) = abs(winFFT(x)).^2; 
+                win_index = floor(512-(bm(j,i)-am(j,i))/2); 
+             
+                top(x,i) = Sw(x,i) * conj(winFFTshift(win_index));
+          
+                
+                bottom(x,i) = abs(winFFTshift(win_index)).^2;
+  
+                win_index= win_index+1;
         end
-        
-    Am_voiced(j,y) = sum(top(:,y))/sum(bottom(:,y));   
-    end    
+        Am_voiced(j,i) = sum(top(:,i))/sum(bottom(:,i));   
+    end
     
 end
 
@@ -39,7 +39,7 @@ for i= 1:columns
     for j = 1:max_p0(i)-1    
         for x = am(j,i):bm(j,i)
         
-        error1(x) = abs(Sw(x,i) - (Am_voiced(j,i)).*(winFFT(x))).^2;
+        error1(x) = abs(Sw(x,i) - (Am_voiced(j,i)).*(winFFTshift(x))).^2;
         end
         
         error_voiced(j,i) = 1/(2*pi) *sum(error1);
@@ -65,9 +65,6 @@ for i= 1:columns
     end  
     
 end
-
-
-
 
 for i= 1:columns
     
@@ -115,7 +112,4 @@ for i = 1:columns
     
 end
 
-
-
 end
-
