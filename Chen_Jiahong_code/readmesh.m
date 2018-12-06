@@ -1,5 +1,8 @@
 function [inVertx, inVerty, inTriangles] = readmesh(meshfile)
 
+%this function takes in a mesh.txt file and output vertex x, vertex y and
+%triangle vertices
+
 mesh_file = csvread(meshfile);
 
 index1 = mesh_file(1);
